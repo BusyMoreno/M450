@@ -39,8 +39,8 @@ public class PreisberechnungTest {
             System.out.println("Testfall 2 erfolgreich.");
         }
 
-        // Testfall 3: 5 Extras (15% Zubehörrabatt, 0% Händlerrabatt)
-        // Erwartet: 20'000 + 1'000 + 2'000 * 0.85 = 22'700.0
+        // Testfall 3: 5 Extras, also 15% Zubehörrabatt und 0% Händlerrabatt
+        // Erwartet sind 20000 + 1000 + 2000 * 0.85 = 22700
         double result3 = calculatePrice(20000, 1000, 2000, 5, 0);
         if (Math.abs(result3 - 22700.0) > 0.001) {
             System.out.println("Testfall 3 fehlgeschlagen! Ist: " + result3 + ", Soll: 22700.0");
