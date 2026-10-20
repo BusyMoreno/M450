@@ -3,7 +3,8 @@ import './AddRecipe.css';
 import { Form, Button, Col, Row, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { createRecipe } from '../../apis/recipeApi';
-import AddIngredient from '../AddIngredient/AddIngredient';
+
+const UNITS = ['PIECE', 'GRAMM', 'KILOGRAMM', 'LITRE', 'DECILITRE'];
 
 function AddRecipe() {
     const navigate = useNavigate();
@@ -33,27 +34,30 @@ function AddRecipe() {
                 ...prev.ingredients,
                 {
                     listId: listId,
-                    ingredient: '',
+                    name: '',
+                    comment: '',
                     unit: 'PIECE',
-                    quantity: ''
+                    amount: 1
                 }
             ]
         }));
         setListId(prevId => prevId + 1);
     };
 
-    const updateIngredient = (ingredientObj) => {
-        const updatedIngredients = formData.ingredients.map(item =>
-            item.listId === ingredientObj.listId ? ingredientObj : item
-        );
-        setFormData(prev => ({ ...prev, ingredients: updatedIngredients }));
+    const updateIngredient = (listId, field, value) => {
+        setFormData(prev => ({
+            ...prev,
+            ingredients: prev.ingredients.map(item =>
+                item.listId === listId ? { ...item, [field]: value } : item
+            )
+        }));
     };
 
-    const removeIngredient = (ingredientObj) => {
-        const updatedIngredients = formData.ingredients.filter(
-            item => item.listId !== ingredientObj.listId
-        );
-        setFormData(prev => ({ ...prev, ingredients: updatedIngredients }));
+    const removeIngredient = (listId) => {
+        setFormData(prev => ({
+            ...prev,
+            ingredients: prev.ingredients.filter(item => item.listId !== listId)
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -61,26 +65,28 @@ function AddRecipe() {
         setErrorMessage('');
 
         if (!formData.name.trim()) {
-            setErrorMessage('Bitte geben Sie einen Rezeptnamen ein.');
+            setErrorMessage('Please enter a recipe name.');
             return;
         }
 
         setIsSubmitting(true);
 
-        // listId entfernen, da das Backend nur ingredient, unit und quantity erwartet
         const payload = {
             name: formData.name,
             description: formData.description,
             imageUrl: formData.imageUrl,
-            ingredients: formData.ingredients.map(({ listId, ...rest }) => rest)
+            ingredients: formData.ingredients.map(({ listId, amount, ...rest }) => ({
+                ...rest,
+                amount: parseInt(amount, 10) || 1
+            }))
         };
 
         try {
             await createRecipe(payload);
             navigate('/');
         } catch (error) {
-            console.error('Fehler beim Speichern:', error);
-            setErrorMessage('Rezept konnte nicht gespeichert werden. Läuft das Backend?');
+            console.error('Error saving recipe:', error);
+            setErrorMessage('Could not save recipe. Please check backend connection.');
         } finally {
             setIsSubmitting(false);
         }
@@ -137,13 +143,45 @@ function AddRecipe() {
                     </Row>
                     <hr />
 
-                    {formData.ingredients.map(ingredient => (
-                        <AddIngredient
-                            key={ingredient.listId}
-                            ingredient={ingredient}
-                            updateIngredient={updateIngredient}
-                            removeIngredient={removeIngredient}
-                        />
+                    {formData.ingredients.map((ingredient) => (
+                        <Row key={ingredient.listId} className="mb-2">
+                            <Col>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Name"
+                                    value={ingredient.name}
+                                    onChange={(e) => updateIngredient(ingredient.listId, 'name', e.target.value)}
+                                    required
+                                />
+                            </Col>
+                            <Col>
+                                <Form.Select
+                                    value={ingredient.unit}
+                                    onChange={(e) => updateIngredient(ingredient.listId, 'unit', e.target.value)}
+                                >
+                                    {UNITS.map(unit => (
+                                        <option key={unit} value={unit}>{unit}</option>
+                                    ))}
+                                </Form.Select>
+                            </Col>
+                            <Col>
+                                <Form.Control
+                                    type="number"
+                                    min="1"
+                                    value={ingredient.amount}
+                                    onChange={(e) => updateIngredient(ingredient.listId, 'amount', e.target.value)}
+                                    required
+                                />
+                            </Col>
+                            <Col xs={1}>
+                                <Button
+                                    variant="outline-dark"
+                                    onClick={() => removeIngredient(ingredient.listId)}
+                                >
+                                    x
+                                </Button>
+                            </Col>
+                        </Row>
                     ))}
 
                     <Row className="my-3">
@@ -155,7 +193,7 @@ function AddRecipe() {
                     </Row>
 
                     <Button variant="primary" type="submit" disabled={isSubmitting} className="mb-5">
-                        {isSubmitting ? 'Wird gespeichert...' : 'Submit'}
+                        {isSubmitting ? 'Saving...' : 'Submit'}
                     </Button>
                 </Form>
             </div>
