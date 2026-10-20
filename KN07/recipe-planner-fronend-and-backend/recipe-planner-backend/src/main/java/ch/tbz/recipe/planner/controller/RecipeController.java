@@ -13,12 +13,10 @@ import java.util.UUID;
 
 @RestController
 @Slf4j
-
-@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = { "http://localhost:3000" })
 public class RecipeController {
 
     private final RecipeService service;
-
     private final RecipeEntityMapper mapper;
 
     public RecipeController(RecipeService service, RecipeEntityMapper mapper) {
@@ -33,7 +31,11 @@ public class RecipeController {
 
     @GetMapping("/api/recipes/recipe/{recipeId}")
     public ResponseEntity<Recipe> getRecipe(@PathVariable UUID recipeId) {
-        return new ResponseEntity<>(service.getRecipeById(recipeId), HttpStatus.OK);
+        Recipe recipe = service.getRecipeById(recipeId);
+        if (recipe == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(recipe, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/recipes")
@@ -41,4 +43,12 @@ public class RecipeController {
         return new ResponseEntity<>(service.addRecipe(recipe), HttpStatus.OK);
     }
 
+    @PutMapping(value = "/api/recipes/recipe/{recipeId}")
+    public ResponseEntity<Recipe> updateRecipe(@PathVariable UUID recipeId, @RequestBody Recipe recipe) {
+        Recipe updated = service.updateRecipe(recipeId, recipe);
+        if (updated == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(updated, HttpStatus.OK);
+    }
 }
