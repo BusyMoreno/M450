@@ -13,7 +13,7 @@ import java.util.UUID;
 
 @RestController
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:3000"})
+@CrossOrigin(origins = { "http://localhost:3000" })
 public class RecipeController {
 
     private final RecipeService service;
@@ -43,7 +43,7 @@ public class RecipeController {
         return new ResponseEntity<>(service.addRecipe(recipe), HttpStatus.OK);
     }
 
-    @PutMapping(value = "/api/recipes/{recipeId}")
+    @PutMapping(value = "/api/recipes/recipe/{recipeId}")
     public ResponseEntity<Recipe> updateRecipe(@PathVariable UUID recipeId, @RequestBody Recipe recipe) {
         Recipe updated = service.updateRecipe(recipeId, recipe);
         if (updated == null) {
